@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	logger := zapadapter.NewZapAdapter(zapadapter.NewZapLogger(zapcore.DebugLevel))
+	logger := zapadapter.NewZapAdapter(zapadapter.NewZapLogger(zapcore.InfoLevel))
 	c, err := client.Dial(client.Options{
 		Logger: logger,
 	})
@@ -25,6 +25,8 @@ func main() {
 	w := worker.New(c, "fibonacci", worker.Options{})
 
 	w.RegisterWorkflow(fibonacci.Workflow)
+	w.RegisterWorkflow(fibonacci.WorkflowFinal)
+	w.RegisterWorkflow(fibonacci.WorkflowStart)
 	w.RegisterActivity(fibonacci.FibonacciActivity)
 
 	err = w.Run(worker.InterruptCh())

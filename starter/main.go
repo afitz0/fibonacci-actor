@@ -30,6 +30,7 @@ func main() {
 	}
 
 	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, fibonacci.Workflow, "Hello", "World")
+	// we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, fibonacci.WorkflowFinal, 0, []string{})
 	if err != nil {
 		log.Fatalln("Unable to execute workflow", err)
 	}

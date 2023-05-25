@@ -12,13 +12,17 @@ import (
 const MaxFibonacciNumber_final = 52
 
 func WorkflowFinal(ctx workflow.Context, startNum int, children []string) (err error) {
+	if startNum >= MaxFibonacciNumber_final {
+		return nil
+	}
+
 	ao := workflow.ActivityOptions{
 		StartToCloseTimeout: 120 * time.Second,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starter workflow started", "StartingNumber", startNum)
+	logger.Info("Fibonacci workflow started", "StartingNumber", startNum)
 
 	selector := workflow.NewSelector(ctx)
 	signalCreateNewChannel := workflow.GetSignalChannel(ctx, "signalCreateNew")
@@ -44,9 +48,9 @@ func WorkflowFinal(ctx workflow.Context, startNum int, children []string) (err e
 		logger.Info("Hello signal received", "SenderId", senderId)
 	})
 
-	fibNumber := 0
+	fibNumber := startNum
 	done := false
-	for fibNumber < MaxFibonacciNumber || !done {
+	for fibNumber < MaxFibonacciNumber && !done {
 		fibFuture := workflow.ExecuteActivity(ctx, FibonacciActivity, fibNumber)
 		selector.AddFuture(fibFuture, func(f workflow.Future) {
 			var result int
@@ -65,7 +69,8 @@ func WorkflowFinal(ctx workflow.Context, startNum int, children []string) (err e
 			return err
 		}
 
-		if fibNumber > 10 {
+		// Continue-As-New every 10 numbers
+		if fibNumber - startNum > 10 {
 			done = true
 		}
 	}

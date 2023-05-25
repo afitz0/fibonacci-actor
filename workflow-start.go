@@ -8,16 +8,16 @@ import (
 
 // 52 is the sweet spot on my 2021 M1 Max macbook, clocking in at just under 2 minutes
 // (assuming no other CPU contention at the time).
-const MaxFibonacciNumber_start = 52
+const MaxFibonacciNumber = 52
 
-func WorkflowStart(ctx workflow.Context, greeting string, name string) (err error) {
+func Workflow(ctx workflow.Context, greeting string, name string) (err error) {
 	ao := workflow.ActivityOptions{
 		StartToCloseTimeout: 120 * time.Second,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Fibonacci workflow started", "greeting", greeting, "name", name)
+	logger.Info("Starter workflow started", "greeting", greeting, "name", name)
 
 	selector := workflow.NewSelector(ctx)
 
