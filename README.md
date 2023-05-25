@@ -1,5 +1,12 @@
-# Temporal Starter Project - Go
+# Workers as Actors
 
-A simple Temporal project to start from.
+A simple example. Demo steps:
 
-I use this repo with [this script](https://gist.github.com/afitz0/6d5b22d7490f66cf82cc54fda62bb009) to quickly be able to start a new Temporal project from scratch.
+1. Run the base workflow, start it multiple times. Hooray, you have loosely coupled computation units.
+
+2. Add signals. Now we can receive messages.
+2a. As a result, start a child workflow, then send it a message. Hooray, sending too!
+
+3. Kill all the workers. Restart them. Things continue.
+
+4. Continue as new. 

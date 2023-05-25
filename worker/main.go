@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap/zapcore"
 
-	"starter"
-	"starter/zapadapter"
+	"fibonacci"
+	"fibonacci/zapadapter"
 )
 
 func main() {
@@ -22,11 +22,10 @@ func main() {
 	}
 	defer c.Close()
 
-	w := worker.New(c, "temporal-starter", worker.Options{})
+	w := worker.New(c, "fibonacci", worker.Options{})
 
-	a := &starter.Activities{}
-	w.RegisterWorkflow(starter.Workflow)
-	w.RegisterActivity(a)
+	w.RegisterWorkflow(fibonacci.Workflow)
+	w.RegisterActivity(fibonacci.FibonacciActivity)
 
 	err = w.Run(worker.InterruptCh())
 	if err != nil {

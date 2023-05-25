@@ -4,12 +4,13 @@ import (
 	"context"
 	"log"
 
+	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 
 	"go.uber.org/zap/zapcore"
 
-	"starter"
-	"starter/zapadapter"
+	"fibonacci"
+	"fibonacci/zapadapter"
 )
 
 func main() {
@@ -22,23 +23,16 @@ func main() {
 	}
 	defer c.Close()
 
+	id := uuid.New().String()
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        "temporal-starter-workflow",
-		TaskQueue: "temporal-starter",
+		ID:        id,
+		TaskQueue: "fibonacci",
 	}
 
-	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, starter.Workflow, "Hello", "World")
+	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, fibonacci.Workflow, "Hello", "World")
 	if err != nil {
 		log.Fatalln("Unable to execute workflow", err)
 	}
 
-	log.Println("Started workflow", "WorkflowID", we.GetID(), "RunID", we.GetRunID())
-
-	// Synchronously wait for the workflow completion.
-	var result string
-	err = we.Get(context.Background(), &result)
-	if err != nil {
-		log.Fatalln("Unable get workflow result", err)
-	}
-	log.Println("Workflow result:", result)
+	log.Println("Started workflow asynchronously", "WorkflowID", we.GetID(), "RunID", we.GetRunID())
 }
