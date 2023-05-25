@@ -1,0 +1,116 @@
+{
+	// Place your actor-workflows workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+
+	"Signal Handler": {
+		"scope": "go",
+		"prefix": "signal",
+		"description": "Add signal handler",
+		"body": [
+			"signalCreateNewChannel := workflow.GetSignalChannel(ctx, \"signalCreateNew\")",
+			"",
+			"selector.AddReceive(signalCreateNewChannel, func(c workflow.ReceiveChannel, _ bool) {",
+			"\tc.Receive(ctx, nil)",
+			"\tlogger.Info(\"Signal received\")",
+			"})",
+		],
+	},
+	"Spawn new and signal": {
+		"scope": "go",
+		"prefix": "spawn",
+		"description": "Spawn new child workflow",
+		"body": [
+			"",
+			"childId = uuid.New().String()",
+			"childWorkflowOptions := workflow.ChildWorkflowOptions{",
+			"\tParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON,",
+			"\tWorkflowID:        childId,",
+			"}",
+			"ctx = workflow.WithChildOptions(ctx, childWorkflowOptions)",
+			"",
+			"childErr := workflow.ExecuteChildWorkflow(ctx, Workflow, \"Hello\", \"There\").Get(ctx, nil)",
+			"if childErr != nil {",
+			"\tlogger.Error(\"Failed to start child\")",
+			"\terr = childErr",
+			"\treturn",
+			"}",
+			"logger.Info(\"Started child workflow\", \"ChildWorkflowId\", childId)",
+		],
+	},
+	"Send Child Signal": {
+		"scope": "go",
+		"prefix": "hello",
+		"description": "Signal hello to other workflow",
+		"body": [
+			"info := workflow.GetInfo(ctx)",
+			"signal := MySignal{",
+			"\tMessage: fmt.Sprintf(\"Hello from %v\", info.WorkflowExecution.ID),",
+			"}",
+			"err = workflow.SignalExternalWorkflow(ctx, childId, \"\", \"signalHello\", signal).Get(ctx, nil)",
+			"if err != nil {",
+			"\tlogger.Error(\"Failed to signal child workflow\", \"ChildId\", childId)",
+			"}",
+		]
+	},
+	"Add Hello Handler": {
+		"scope": "go",
+		"prefix": "receive-hello",
+		"description": "Receive hello from other workflow",
+		"body": [
+			"signalHelloChannel := workflow.GetSignalChannel(ctx, \"signalHello\")",
+			"selector.AddReceive(signalHelloChannel, func(c workflow.ReceiveChannel, _ bool) {",
+			"\tvar senderId string",
+			"\tc.Receive(ctx, &senderId)",
+			"\tlogger.Info(\"Hello signal received\", \"SenderId\", senderId)",
+			"})",
+		],
+	},
+	"Drain Signals": {
+		"scope": "go",
+		"prefix": "drain-signals",
+		"description": "Drain all signals before continuing as new",
+		"body": [
+			"// Drain hello signal channel asynchronously to avoid signal loss",
+			"for {",
+			"\tvar senderId string",
+			"\tok := signalHelloChannel.ReceiveAsync(&senderId)",
+			"\tif !ok {",
+			"\t\tbreak",
+			"\t}",
+			"\tlogger.Info(\"Hello signal received\", \"SenderId\", senderId)",
+			"}",
+			"",
+			"// Drain spawn new signal channel asynchronously to avoid signal loss",
+			"for {",
+			"\tok := signalHelloChannel.ReceiveAsync(nil)",
+			"\tif !ok {",
+			"\t\tbreak",
+			"\t}",
+			"\tlogger.Info(\"Start Child signal received\")",
+			"",
+			"\tchildId, childErr := startChild(ctx)",
+			"\tif childErr != nil {",
+			"\t\tlogger.Error(\"Failed to start child workflow\")",
+			"\t\terr = childErr",
+			"\t\treturn",
+			"\t}",
+			"\tchildIds = append(childIds, childId)",
+			"}",
+			"return workflow.NewContinueAsNewError(ctx, WorkflowFinal, fibNumber, childIds)",
+		],
+	}
+}
