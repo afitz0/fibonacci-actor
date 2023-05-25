@@ -17,7 +17,7 @@ func Workflow(ctx workflow.Context, greeting string, name string) (err error) {
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("Starter workflow started", "greeting", greeting, "name", name)
+	logger.Info("Fibonacci workflow started", "greeting", greeting, "name", name)
 
 	selector := workflow.NewSelector(ctx)
 
