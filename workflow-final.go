@@ -3,7 +3,6 @@ package fibonacci
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/workflow"
 )
@@ -70,7 +69,7 @@ func WorkflowFinal(ctx workflow.Context, startNum int, children []string) (err e
 		}
 
 		// Continue-As-New every 10 numbers
-		if fibNumber - startNum > 10 {
+		if fibNumber-startNum > 10 {
 			done = true
 		}
 	}
@@ -105,19 +104,20 @@ func WorkflowFinal(ctx workflow.Context, startNum int, children []string) (err e
 }
 
 func startChild(ctx workflow.Context) (childId string, err error) {
-	childId = uuid.New().String()
 	childWorkflowOptions := workflow.ChildWorkflowOptions{
 		ParentClosePolicy: enums.PARENT_CLOSE_POLICY_ABANDON,
-		WorkflowID:        childId,
 	}
 	ctx = workflow.WithChildOptions(ctx, childWorkflowOptions)
 
-	err = workflow.ExecuteChildWorkflow(ctx, WorkflowFinal, 0, []string{}).Get(ctx, nil)
+	childFuture := workflow.ExecuteChildWorkflow(ctx, WorkflowFinal, 0, []string{})
+	var childWorkflow workflow.Execution
+	err = childFuture.GetChildWorkflowExecution().Get(ctx, &childWorkflow)
 	if err != nil {
-		workflow.GetLogger(ctx).Error("Failed to start child")
+		workflow.GetLogger(ctx).Error("Failed to get child workflow")
 		return "", err
 	}
-	workflow.GetLogger(ctx).Info("Started child workflow", "ChildWorkflowId", childId)
+
+	workflow.GetLogger(ctx).Info("Started child workflow", "ChildWorkflowId", childWorkflow.ID)
 
 	return childId, nil
 }
